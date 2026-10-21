@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Batalha de Funções</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a33;--line:#24305a;--txt:#e8ecff;--mut:#8b97c7;--cy:#22d3ee;--pu:#c084fc;--or:#fb923c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{max-width:1200px;margin:0 auto;padding:18px 16px 4px}
+h1{margin:0;font-size:24px}
+h1 span{color:var(--or)}
+.sub{color:var(--mut);margin:4px 0 0;font-size:14px}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 16px 24px;display:grid;grid-template-columns:1fr 310px;gap:16px}
+@media(max-width:920px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+canvas{width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:#0e1530}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+button{background:#1a2447;color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:14px;cursor:pointer;font-family:"Cambria Math",Georgia,serif;font-style:italic}
+button:hover{border-color:#5b6fb8;background:#223061}
+button.fn{border-color:#7a4a1e;color:#ffd2a6}
+button.op.d{border-color:#136a7c;color:#9be9f7}
+button.op.i{border-color:#6d3f99;color:#e3c6ff}
+button.act{font-family:inherit;font-style:normal;font-weight:600}
+button.primary{background:#7a3d0c;border-color:#fb923c}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;font-size:13px;color:var(--mut)}
+.row label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.stats{display:flex;gap:14px;font-size:13px;margin-top:8px;color:var(--mut)}
+.stats b{color:var(--txt)}
+h2{font-size:14px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+#log{list-style:none;margin:0;padding:0;font-size:14px;max-height:300px;overflow:hidden}
+#log li{padding:6px 8px;border-left:3px solid var(--line);margin-bottom:5px;background:#0e1530;border-radius:0 8px 8px 0;font-family:"Cambria Math",Georgia,serif;line-height:1.3}
+#log li small{display:block;color:var(--mut);font-family:system-ui,sans-serif;font-size:12px}
+.rules{font-size:13px;color:#c3cbec;line-height:1.5;margin:0;padding-left:18px}
+.rules li{margin-bottom:4px}
+.side{display:flex;flex-direction:column;gap:16px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Batalha de <span>Funções</span> ⚔️</h1>
+  <p class="sub">Quando uma função encontra um operador, a matemática acontece. Solte combatentes e assista.</p>
+</header>
+
+<div class="wrap">
+  <main>
+    <div class="card">
+      <canvas id="arena"></canvas>
+      <div class="stats">
+        <span>Funções vivas: <b id="nFn">0</b></span>
+        <span>Operadores vivos: <b id="nOp">0</b></span>
+        <span>Colisões: <b id="nHit">0</b></span>
+      </div>
+      <div class="toolbar">
+        <div class="group"><span class="lbl">Funções</span><span id="fnBtns" class="group"></span></div>
+        <div class="group"><span class="lbl">Operadores</span><span id="opBtns" class="group"></span></div>
+      </div>
+      <div class="toolbar">
+        <button class="act primary" id="bDuel">▶ Duelo do vídeo</button>
+        <button class="act" id="bChaos">🎲 Caos</button>
+        <button class="act" id="bPause">⏸ Pausar</button>
+        <button class="act" id="bClear">🧹 Limpar</button>
+      </div>
+      <div class="row">
+        <label>Velocidade <input type="range" id="speed" min="0.3" max="3" step="0.1" value="1"></label>
+        <label><input type="checkbox" id="hunt" checked> Operadores caçam funções</label>
+        <label><input type="checkbox" id="merge" checked> Funções se somam ao colidir</label>
+      </div>
+    </div>
+  </main>
+
+  <aside class="side">
+    <div class="card">
+      <h2>Registro de batalha</h2>
+      <ul id="log"></ul>
+    </div>
+    <div class="card">
+      <h2>Regras da arena</h2>
+      <ul class="rules">
+        <li><b>d/dx</b> + função → a função é derivada. x³ → 3x² → 6x → 6 → 0 (some!)</li>
+        <li><b>∫</b> + função → a função é integrada (sem o +C). x² → x³/3</li>
+        <li><b>d/dx</b> + <b>∫</b> → se anulam (operações inversas)</li>
+        <li>Função + função → somam (se a opção estiver ligada)</li>
+        <li>Cada operador tem 6 cargas; cada colisão gasta 1.</li>
+        <li>Função que "explode" (grau &gt; 7) desaparece.</li>
+        <li>Curiosidade: eˣ é imune à derivada; sen e cos giram em ciclo para sempre.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ==== MOTOR ====
+// ---------- Frações exatas (evita 0.3333333 na tela) ----------
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const F=(n,d=1)=>{ if(d<0){n=-n;d=-d;} const g=gcd(n,d)||1; return {n:n/g,d:d/g}; };
+const fAdd=(a,b)=>F(a.n*b.d+b.n*a.d,a.d*b.d);
+const fMul=(a,b)=>F(a.n*b.n,a.d*b.d);
+const fVal=a=>a.n/a.d;
+const fZero=a=>a.n===0;
+
+// ---------- Função = lista de termos ----------
+// termo: {k:'p'|'sin'|'cos'|'exp', n:expoente (só 'p'), c:coeficiente (fração)}
+const T=(k,c,n=0)=>({k,n,c});
+
+function simplify(ts){
+  const m=new Map();
+  for(const t of ts){
+    const key=t.k==='p'?'p'+t.n:t.k;
+    const old=m.get(key);
+    m.set(key, old?{...old,c:fAdd(old.c,t.c)}:{...t});
+  }
+  const order={p:0,sin:1,cos:2,exp:3};
+  return [...m.values()].filter(t=>!fZero(t.c)).sort((a,b)=>order[a.k]-order[b.k]||b.n-a.n);
+}
+
+function deriv(ts){
+  const out=[];
+  for(const t of ts){
+    if(t.k==='p'){ if(t.n>0) out.push(T('p',fMul(t.c,F(t.n)),t.n-1)); }   // (c x^n)' = c n x^(n-1); constante -> some
+    else if(t.k==='sin') out.push(T('cos',t.c));                           // (sen)' = cos
+    else if(t.k==='cos') out.push(T('sin',fMul(t.c,F(-1))));               // (cos)' = -sen
+    else out.push(T('exp',t.c));                                           // (e^x)' = e^x
+  }
+  return simplify(out);
+}
+
+function integ(ts){
+  const out=[];
+  for(const t of ts){
+    if(t.k==='p') out.push(T('p',fMul(t.c,F(1,t.n+1)),t.n+1));             // ∫ c x^n = c x^(n+1)/(n+1)
+    else if(t.k==='sin') out.push(T('cos',fMul(t.c,F(-1))));               // ∫ sen = -cos
+    else if(t.k==='cos') out.push(T('sin',t.c));                           // ∫ cos = sen
+    else out.push(T('exp',t.c));
+  }
+  return simplify(out);
+}
+
+const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sup=n=>String(n).split('').map(d=>SUP[d]).join('');
+function body(c,core){
+  const m=Math.abs(c.n);
+  const num=(m===1&&core)?'':String(m);
+  const gap=(num&&/^(sen|cos)/.test(core))?' ':'';
+  return num+gap+core+(c.d!==1?'/'+c.d:'');
+}
+function toStr(ts){
+  if(!ts.length) return '0';
+  return ts.map((t,i)=>{
+    const neg=t.c.n<0; let core;
+    if(t.k==='p') core=t.n===0?'':(t.n===1?'x':'x'+sup(t.n));
+    else if(t.k==='sin') core='sen x';
+    else if(t.k==='cos') core='cos x';
+    else core='eˣ';
+    const b=body(t.c,core);
+    if(i===0) return (neg?'−':'')+b;
+    return (neg?' − ':' + ')+b;
+  }).join('');
+}
+function evalF(ts,x){
+  let s=0;
+  for(const t of ts){
+    const c=fVal(t.c);
+    s+= t.k==='p'?c*Math.pow(x,t.n): t.k==='sin'?c*Math.sin(x): t.k==='cos'?c*Math.cos(x): c*Math.exp(x);
+  }
+  return s;
+}
+const isConst=ts=>ts.length>0&&ts.every(t=>t.k==='p'&&t.n===0);
+const isExplosive=ts=>ts.some(t=>(t.k==='p'&&t.n>7)||Math.abs(fVal(t.c))>1e4);
+// ==== FIM MOTOR ====
+
+// ---------- Canvas ----------
+const cv=document.getElementById('arena'), ctx=cv.getContext('2d');
+const W=900,H=560,S=50,OX=W/2,OY=H/2;
+const dpr=Math.min(2,window.devicePixelRatio||1);
+cv.width=W*dpr; cv.height=H*dpr;
+const $=id=>document.getElementById(id);
+const rand=(a,b)=>a+Math.random()*(b-a);
+
+// ---------- Estado ----------
+let ents=[], particles=[], pops=[], nextId=1, hits=0, paused=false;
+const fnColors=['#fb923c','#f97316','#fbbf24','#f472b6','#34d399','#facc15','#60a5fa'];
+const OPS={d:{label:'d/dx',color:'#22d3ee',sym:'d/dx'}, i:{label:'∫',color:'#c084fc',sym:'∫'}};
+const MAX_CHARGES=6;
+
+function layout(e){
+  if(e.type==='op'){ e.r=36; return; }
+  e.label=toStr(e.terms);
+  ctx.font='italic 600 18px "Cambria Math",Georgia,serif';
+  const w=ctx.measureText(e.label).width;
+  e.fs=Math.max(11,Math.min(18,18*130/Math.max(w,1)));
+  e.r=Math.max(28,Math.min(84,(w*e.fs/18)/2+16));
+}
+function randVel(sp){ const a=rand(0,Math.PI*2); return [Math.cos(a)*sp,Math.sin(a)*sp]; }
+function spawnFn(terms,x,y,vx,vy){
+  const [rx,ry]=randVel(rand(55,100));
+  const e={id:nextId++,type:'fn',terms,x:x??rand(90,W-90),y:y??rand(90,H-90),vx:vx??rx,vy:vy??ry,
+           color:fnColors[nextId%fnColors.length],cool:0,fade:1,dying:false,age:0};
+  layout(e); ents.push(e); return e;
+}
+function spawnOp(op,x,y,vx,vy){
+  const [rx,ry]=randVel(rand(60,100));
+  const e={id:nextId++,type:'op',op,x:x??rand(90,W-90),y:y??rand(90,H-90),vx:vx??rx,vy:vy??ry,
+           color:OPS[op].color,charges:MAX_CHARGES,cool:0,fade:1,dying:false,age:0};
+  layout(e); ents.push(e); return e;
+}
+const kill=e=>{ e.dying=true; };
+
+// ---------- Registro, partículas e textos flutuantes ----------
+function log(html,color='#5b6fb8',note=''){
+  const li=document.createElement('li');
+  li.style.borderLeftColor=color;
+  li.innerHTML=html+(note?`<small>${note}</small>`:'');
+  const ul=$('log'); ul.prepend(li);
+  while(ul.children.length>9) ul.removeChild(ul.lastChild);
+}
+function burst(x,y,color){
+  for(let i=0;i<18;i++){ const [vx,vy]=randVel(rand(40,170)); particles.push({x,y,vx,vy,life:rand(.4,.9),max:.9,color}); }
+}
+function pop(x,y,text,color='#fff'){ pops.push({x,y,text,life:1.8,color}); }
+
+// ---------- Colisões ----------
+function bounce(a,b){
+  const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, nx=dx/d, ny=dy/d;
+  const rv=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+  if(rv>0){ a.vx-=rv*nx; a.vy-=rv*ny; b.vx+=rv*nx; b.vy+=rv*ny; }
+  const ov=a.r+b.r-d;
+  if(ov>0){ a.x-=nx*ov/2; a.y-=ny*ov/2; b.x+=nx*ov/2; b.y+=ny*ov/2; }
+}
+
+function collide(a,b){
+  hits++;
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+
+  // operador x operador
+  if(a.type==='op'&&b.type==='op'){
+    if(a.op!==b.op){
+      log('d/dx ∘ ∫ = identidade','#e8ecff','Operações inversas: os dois se anulam.');
+      pop(mx,my,'se anulam!'); burst(mx,my,'#ffffff'); kill(a); kill(b);
+    } else { bounce(a,b); a.cool=b.cool=.3; }
+    return;
+  }
+
+  // função x função
+  if(a.type==='fn'&&b.type==='fn'){
+    const merged=simplify([...a.terms,...b.terms]);
+    if(!$('merge').checked || merged.length>4){ bounce(a,b); a.cool=b.cool=.3; return; }
+    const sa=toStr(a.terms), sb=toStr(b.terms);
+    if(!merged.length){
+      log(`( ${sa} ) + ( ${sb} ) = 0`,'#fbbf24','Se cancelaram por completo.');
+      pop(mx,my,'= 0'); burst(mx,my,'#fbbf24'); kill(a); kill(b);
+    } else {
+      a.terms=merged; layout(a); a.x=mx; a.y=my; a.cool=.5;
+      log(`( ${sa} ) + ( ${sb} ) = ${toStr(merged)}`,'#fbbf24','Duas funções se fundiram.');
+      pop(mx,my,toStr(merged),'#fde68a'); burst(mx,my,'#fbbf24'); kill(b);
+    }
+    return;
+  }
+
+  // operador x função
+  const op=a.type==='op'?a:b, f=a.type==='op'?b:a;
+  const before=toStr(f.terms), sym=OPS[op.op].sym;
+  const res=op.op==='d'?deriv(f.terms):integ(f.terms);
+  op.charges--;
+  let survived=true;
+  if(!res.length){
+    log(`${sym}( ${before} ) = 0`,OPS[op.op].color,'Derivada de constante é zero: a função sumiu!');
+    pop(mx,my,'= 0','#9be9f7'); burst(mx,my,f.color); kill(f); survived=false;
+  } else if(isExplosive(res)){
+    log(`${sym}( ${before} ) = ${toStr(res)}`,OPS[op.op].color,'Cresceu demais e explodiu!');
+    pop(mx,my,'💥'); burst(mx,my,'#ef4444'); kill(f); survived=false;
+  } else {
+    f.terms=res; layout(f);
+    const note=isConst(res)&&op.op==='d'?'Virou constante! A próxima derivada dá 0.'
+              :op.op==='i'?'(constante de integração +C ignorada)':'';
+    log(`${sym}( ${before} ) = ${toStr(res)}`,OPS[op.op].color,note);
+    pop(mx,my,toStr(res),OPS[op.op].color); burst(mx,my,OPS[op.op].color);
+  }
+  if(op.charges<=0){ kill(op); pop(op.x,op.y-40,'sem cargas','#8b97c7'); }
+  if(survived&&!op.dying){ bounce(op,f); }
+  op.cool=f.cool=.5;
+}
+
+// ---------- Atualização ----------
+function step(dt){
+  const hunt=$('hunt').checked;
+  for(const e of ents){
+    e.age+=dt; e.cool=Math.max(0,e.cool-dt);
+    if(e.dying){ e.fade-=dt/.4; continue; }
+    if(e.type==='op'&&hunt){
+      let best=null,bd=1e9;
+      for(const f of ents) if(f.type==='fn'&&!f.dying){ const d=Math.hypot(f.x-e.x,f.y-e.y); if(d<bd){bd=d;best=f;} }
+      if(best){
+        e.vx+=(best.x-e.x)/bd*140*dt; e.vy+=(best.y-e.y)/bd*140*dt;
+        const sp=Math.hypot(e.vx,e.vy); if(sp>140){ e.vx*=140/sp; e.vy*=140/sp; }
+      }
+    }
+    e.x+=e.vx*dt; e.y+=e.vy*dt;
+    if(e.x<e.r){e.x=e.r;e.vx=Math.abs(e.vx);} if(e.x>W-e.r){e.x=W-e.r;e.vx=-Math.abs(e.vx);}
+    if(e.y<e.r){e.y=e.r;e.vy=Math.abs(e.vy);} if(e.y>H-e.r){e.y=H-e.r;e.vy=-Math.abs(e.vy);}
+  }
+  for(let i=0;i<ents.length;i++) for(let j=i+1;j<ents.length;j++){
+    const a=ents[i], b=ents[j];
+    if(a.dying||b.dying||a.cool>0||b.cool>0) continue;
+    if(Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r) collide(a,b);
+  }
+  ents=ents.filter(e=>!(e.dying&&e.fade<=0));
+  for(const p of particles){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vx*=.96; p.vy*=.96; p.life-=dt; }
+  particles=particles.filter(p=>p.life>0);
+  for(const p of pops){ p.y-=26*dt; p.life-=dt; }
+  pops=pops.filter(p=>p.life>0);
+}
+
+// ---------- Desenho ----------
+function drawGrid(){
+  ctx.fillStyle='#0e1530'; ctx.fillRect(0,0,W,H);
+  ctx.lineWidth=1; ctx.strokeStyle='rgba(120,140,220,.10)';
+  ctx.beginPath();
+  for(let x=OX%S;x<=W;x+=S){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+  for(let y=OY%S;y<=H;y+=S){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+  ctx.stroke();
+  ctx.strokeStyle='rgba(160,175,235,.40)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(0,OY);ctx.lineTo(W,OY);ctx.moveTo(OX,0);ctx.lineTo(OX,H); ctx.stroke();
+  ctx.fillStyle='rgba(160,175,235,.6)'; ctx.font='italic 15px "Cambria Math",Georgia,serif';
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillText('x',W-16,OY-8); ctx.fillText('y',OX+8,16); ctx.fillText('O',OX+6,OY+16);
+}
+function drawCurve(e){
+  ctx.save(); ctx.globalAlpha=.30*e.fade; ctx.strokeStyle=e.color; ctx.lineWidth=2.5;
+  ctx.beginPath(); let pen=false;
+  for(let px=0;px<=W;px+=3){
+    const y=evalF(e.terms,(px-OX)/S), py=OY-y*S;
+    if(!isFinite(py)||py<-20||py>H+20){pen=false;continue;}
+    if(pen) ctx.lineTo(px,py); else {ctx.moveTo(px,py);pen=true;}
+  }
+  ctx.stroke(); ctx.restore();
+}
+function drawEnt(e){
+  ctx.save(); ctx.globalAlpha=Math.max(0,e.fade);
+  const sc=e.dying?(.6+.4*e.fade):1;
+  ctx.translate(e.x,e.y); ctx.scale(sc,sc);
+  ctx.shadowColor=e.color; ctx.shadowBlur=26;
+  ctx.fillStyle=e.color+'44'; ctx.strokeStyle=e.color; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(0,0,e.r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(e.type==='fn'){
+    ctx.font=`italic 600 ${e.fs}px "Cambria Math",Georgia,serif`; ctx.fillText(e.label,0,1);
+  } else if(e.op==='d'){
+    ctx.font='italic 600 16px "Cambria Math",Georgia,serif';
+    ctx.fillText('d',0,-9); ctx.fillText('dx',0,10);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(12,0); ctx.stroke();
+  } else {
+    ctx.font='600 34px "Cambria Math",Georgia,serif'; ctx.fillText('∫',0,2);
+  }
+  if(e.type==='op'){
+    const bw=e.r*1.8;
+    ctx.fillStyle='#1f2a50'; ctx.fillRect(-bw/2,e.r+8,bw,6);
+    ctx.fillStyle=e.color; ctx.fillRect(-bw/2,e.r+8,bw*Math.max(0,e.charges)/MAX_CHARGES,6);
+    ctx.fillStyle='#c3cbec'; ctx.font='11px system-ui,sans-serif'; ctx.fillText(`${Math.max(0,e.charges)}/${MAX_CHARGES}`,0,e.r+24);
+  }
+  ctx.restore();
+}
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  drawGrid();
+  for(const e of ents) if(e.type==='fn') drawCurve(e);
+  for(const e of ents) drawEnt(e);
+  for(const p of particles){ ctx.globalAlpha=Math.max(0,p.life/p.max); ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+  for(const p of pops){
+    ctx.globalAlpha=Math.min(1,p.life); ctx.fillStyle=p.color; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='italic 700 17px "Cambria Math",Georgia,serif'; ctx.shadowColor='#000'; ctx.shadowBlur=6;
+    ctx.fillText(p.text,p.x,p.y-30); ctx.shadowBlur=0;
+  }
+  ctx.globalAlpha=1;
+  $('nFn').textContent=ents.filter(e=>e.type==='fn'&&!e.dying).length;
+  $('nOp').textContent=ents.filter(e=>e.type==='op'&&!e.dying).length;
+  $('nHit').textContent=hits;
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  if(!paused) step(dt*parseFloat($('speed').value));
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ---------- Interface ----------
+const FN_PRESETS=[
+  ['x',[T('p',F(1),1)]],['x²',[T('p',F(1),2)]],['x³',[T('p',F(1),3)]],['x⁴',[T('p',F(1),4)]],
+  ['sen x',[T('sin',F(1))]],['cos x',[T('cos',F(1))]],['eˣ',[T('exp',F(1))]],['5',[T('p',F(5),0)]]
+];
+FN_PRESETS.forEach(([name,terms])=>{
+  const b=document.createElement('button'); b.className='fn'; b.textContent=name;
+  b.onclick=()=>spawnFn(terms.map(t=>({...t,c:{...t.c}})));
+  $('fnBtns').appendChild(b);
+});
+[['d/dx','d'],['∫','i']].forEach(([name,op])=>{
+  const b=document.createElement('button'); b.className='op '+op; b.textContent=name;
+  b.onclick=()=>spawnOp(op); $('opBtns').appendChild(b);
+});
+const clone=terms=>terms.map(t=>({...t,c:{...t.c}}));
+$('bClear').onclick=()=>{ ents=[]; particles=[]; pops=[]; hits=0; $('log').innerHTML=''; };
+$('bPause').onclick=()=>{ paused=!paused; $('bPause').textContent=paused?'▶ Continuar':'⏸ Pausar'; };
+$('bChaos').onclick=()=>{
+  for(let i=0;i<4;i++) spawnFn(clone(FN_PRESETS[Math.floor(rand(0,FN_PRESETS.length))][1]));
+  spawnOp('d'); spawnOp(Math.random()<.5?'d':'i');
+};
+$('bDuel').onclick=()=>{
+  $('bClear').onclick();
+  spawnFn([T('p',F(1),3)],220,420, 70,-55);   // x³ sobe em direção ao operador
+  spawnOp('d',700,140,-70,55);                  // d/dx desce em direção à função
+  log('Duelo: x³ contra d/dx','#e8ecff','Observe x³ → 3x² → 6x → 6 → 0');
+};
+
+$('bDuel').onclick();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
